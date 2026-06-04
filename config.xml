@@ -35,5 +35,4 @@
     <plugin name="cordova-plugin-whitelist" spec="1.*" />
     <plugin name="cordova-plugin-statusbar" spec="3.*" />
     <plugin name="cordova-plugin-device" spec="2.*" />
-    <plugin name="cordova-plugin-splashscreen" spec="6.*" />
 </widget>

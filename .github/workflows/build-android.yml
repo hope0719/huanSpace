@@ -9,12 +9,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    env:
-      # 强制使用项目内的 Gradle Wrapper，不用系统的
-      GRADLE_USER_HOME: ${{ github.workspace }}/.gradle
-      # 确保 Java 路径正确
-      JAVA_HOME: /opt/hostedtoolcache/Java_Zulu_jdk/17.0.13-11/x64
-
     steps:
     - uses: actions/checkout@v4
 
@@ -53,19 +47,11 @@ jobs:
         echo "=== Step 1: Add Platform ==="
         npx cordova@12 platform add android@12.0.0 --no-interactive --no-update-notifier
 
-        echo "=== Step 2: Fix Gradle Wrapper ==="
-        # 确保使用项目自己的 Gradle，不是系统的 Gradle 9.5
-        cd platforms/android
-        chmod +x gradlew
-        ./gradlew --version || echo "Gradle wrapper check done"
-        cd ../..
-
-        echo "=== Step 3: Build APK ==="
-        npx cordova@12 build android --debug --no-interactive --no-update-notifier \
-          --buildConfig='{"cdvMinSdkVersion":22,"android-targetSdkVersion":34}'
+        echo "=== Step 2: Build APK ==="
+        npx cordova@12 build android --debug --no-interactive --no-update-notifier
 
         echo "=== Done! Listing output ==="
-        find . -name "*.apk" -type f 2>/dev/null
+        find . -name "*.apk" -type f 2>/dev/null || echo "No APK found"
 
     - name: Upload APK
       uses: actions/upload-artifact@v4

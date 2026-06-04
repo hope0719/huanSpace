@@ -9,6 +9,12 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    env:
+      # 强制使用项目内的 Gradle Wrapper，不用系统的
+      GRADLE_USER_HOME: ${{ github.workspace }}/.gradle
+      # 确保 Java 路径正确
+      JAVA_HOME: /opt/hostedtoolcache/Java_Zulu_jdk/17.0.13-11/x64
+
     steps:
     - uses: actions/checkout@v4
 
@@ -29,29 +35,37 @@ jobs:
     - name: Setup Android SDK & Build APK
       run: |
         sudo apt-get update && sudo apt-get install -y wget unzip
-        
+
         export ANDROID_HOME=$HOME/Android/Sdk
         mkdir -p $ANDROID_HOME/cmdline-tools
         cd $ANDROID_HOME/cmdline-tools
-        
+
         curl -fsSL https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -o tools.zip
         unzip -q tools.zip && mv cmdline-tools latest && rm tools.zip
-        
+
         export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools
-        
+
         yes | sdkmanager --licenses > /dev/null 2>&1 || true
         sdkmanager "platforms;android-34" "build-tools;34.0.0"
-        
+
         cd $GITHUB_WORKSPACE
-        
-        echo "=== Step 1: Add Android Platform ==="
+
+        echo "=== Step 1: Add Platform ==="
         npx cordova@12 platform add android@12.0.0 --no-interactive --no-update-notifier
-        
-        echo "=== Step 2: Build Debug APK ==="
-        npx cordova@12 build android --debug --no-interactive --no-update-notifier
-        
-        echo "=== Build Complete ==="
-        ls -la platforms/android/app/build/outputs/apk/debug/
+
+        echo "=== Step 2: Fix Gradle Wrapper ==="
+        # 确保使用项目自己的 Gradle，不是系统的 Gradle 9.5
+        cd platforms/android
+        chmod +x gradlew
+        ./gradlew --version || echo "Gradle wrapper check done"
+        cd ../..
+
+        echo "=== Step 3: Build APK ==="
+        npx cordova@12 build android --debug --no-interactive --no-update-notifier \
+          --buildConfig='{"cdvMinSdkVersion":22,"android-targetSdkVersion":34}'
+
+        echo "=== Done! Listing output ==="
+        find . -name "*.apk" -type f 2>/dev/null
 
     - name: Upload APK
       uses: actions/upload-artifact@v4

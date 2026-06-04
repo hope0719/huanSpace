@@ -9,6 +9,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    env:
+      ANDROID_HOME: /usr/local/lib/android/sdk
+      ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+
     steps:
     - uses: actions/checkout@v4
 
@@ -23,55 +27,40 @@ jobs:
       with:
         node-version: '20'
 
-    # 🔑 安装 Gradle 8.4（Cordova Android 13 兼容）
-    - name: Install Gradle 8.4
-      run: |
-        cd /tmp
-        curl -fsSL https://services.gradle.org/distributions/gradle-8.4-bin.zip -o gradle.zip
-        sudo unzip -q gradle.zip -d /opt/
-        sudo ln -sf /opt/gradle-8.4/bin/gradle /usr/local/bin/gradle
-        rm gradle.zip
-        gradle --version | head -3
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
 
-    - name: Update cordova-android to v13
+    - name: Accept Android licenses & install components
       run: |
-        sed -i '' 's/"cordova-android": "^12.0.0"/"cordova-android": "^13.0.0"/' package.json || \
-        sed -i 's/"cordova-android": "^12.0.0"/"cordova-android": "^13.0.0"/' package.json
+        yes | sdkmanager --licenses > /dev/null 2>&1 || true
+        sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
 
     - name: Install dependencies
       run: npm install
 
-    - name: Setup Android SDK & Build APK
+    - name: Build APK
       run: |
-        sudo apt-get update && sudo apt-get install -y wget unzip
-
-        export ANDROID_HOME=$HOME/Android/Sdk
-        mkdir -p $ANDROID_HOME/cmdline-tools
-        cd $ANDROID_HOME/cmdline-tools
-
-        curl -fsSL https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -o tools.zip
-        unzip -q tools.zip && mv cmdline-tools latest && rm tools.zip
-
-        export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools
-
-        yes | sdkmanager --licenses > /dev/null 2>&1 || true
-        sdkmanager "platforms;android-34" "build-tools;34.0.0"
-
-        cd $GITHUB_WORKSPACE
-
         echo "=== Step 1: Add Platform ==="
         npx cordova@12 platform add android@13.0.0 --no-interactive --no-update-notifier
 
-        echo "=== Step 2: Fix Gradle Wrapper Version ==="
-        # 强制使用 Gradle 8.4（与系统安装的一致）
-        sed -i 's|distributionUrl=.*|distributionUrl=https\\://services.gradle.org/distributions/gradle-8.4-bin.zip|' \
-          platforms/android/gradle/wrapper/gradle-wrapper.properties 2>/dev/null || true
-        cat platforms/android/gradle/wrapper/gradle-wrapper.properties 2>/dev/null || echo "No wrapper found"
+        echo "=== Step 2: Check Gradle Wrapper ==="
+        cat platforms/android/gradle/wrapper/gradle-wrapper.properties || echo "No wrapper file"
+        
+        echo "=== Step 3: Make gradlew executable ==="
+        chmod +x platforms/android/gradlew || true
 
-        echo "=== Step 3: Build APK ==="
-        npx cordova@12 build android --debug --no-interactive --no-update-notifier
+        echo "=== Step 4: Test Gradle ==="
+        cd platforms/android && ./gradlew --version || echo "Gradle test done" && cd ../..
 
-        echo "=== Done! ==="
+        echo "=== Step 5: Build APK (with verbose output) ==="
+        npx cordova@12 build android --debug --no-interactive --no-update-notifier --buildConfig='{"cdvMinSdkVersion":22}' || {
+          echo "=== BUILD FAILED! Showing Gradle error details ==="
+          cat platforms/android/build/reports/lint-results-debug.xml 2>/dev/null || true
+          find platforms/android/build -name "*.log" -exec cat {} \; 2>/dev/null || true
+          exit 1
+        }
+
+        echo "=== Done! Listing output ==="
         find . -name "*.apk" -type f 2>/dev/null || echo "No APK found"
 
     - name: Upload APK
@@ -79,5 +68,7 @@ jobs:
       if: always()
       with:
         name: huanSpace-debug-APK
-        path: platforms/android/app/build/outputs/apk/debug/app-debug.apk
+        path: |
+          platforms/android/app/build/outputs/apk/debug/app-debug.apk
+          platforms/android/build/outputs/apk/debug/*.apk
         retention-days: 30

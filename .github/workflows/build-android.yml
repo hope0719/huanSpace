@@ -10,51 +10,36 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+    - uses: actions/checkout@v4
 
-    - name: Setup Java 17 (Zulu)
+    - name: Setup JDK 17
       uses: actions/setup-java@v4
       with:
         distribution: 'zulu'
         java-version: '17'
 
     - name: Setup Android SDK
-      run: |
-        export ANDROID_HOME=$RUNNER_WORKSPACE/android-sdk
-        mkdir -p $ANDROID_HOME/cmdline-tools
-        cd $ANDROID_HOME/cmdline-tools
-        curl -sL https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -o tools.zip
-        unzip -q tools.zip
-        mv cmdline-tools latest
-        echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
-        echo "$ANDROID_HOME/platform-tools" >> $GITHUB_PATH
-        echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> $GITHUB_PATH
-
-    - name: Accept licenses & install SDK components
-      run: |
-        yes | sdkmanager --licenses > /dev/null 2>&1 || true
-        sdkmanager "platforms;android-34" "build-tools;34.0.0"
+      uses: subosito/android-action@v1
+      with:
+        api-level: 34
+        build-tools: 34.0.0
+        arch: x64
+        cache: true
 
     - name: Setup Node.js 20
       uses: actions/setup-node@v4
       with:
         node-version: '20'
-        cache: 'npm'
 
-    - name: Install Cordova CLI
-      run: npm install -g cordova@12.0.0
+    - name: Install dependencies
+      run: npm install
 
-    - name: Install project dependencies
-      run: npm ci
-
-    - name: Add Android platform & Build
+    - name: Accept licenses & build
       run: |
-        cordova platform rm android 2>/dev/null || true
-        cordova platform add android@12.0.0 --no-interactive
-        cordova build android --debug --verbose --no-interactive
+        yes | sdkmanager --licenses > /dev/null 2>&1 || true
+        npx cordova@12 build android --debug --no-interactive
 
-    - name: Upload APK artifact
+    - name: Upload APK
       uses: actions/upload-artifact@v4
       if: always()
       with:

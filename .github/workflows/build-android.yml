@@ -23,13 +23,17 @@ jobs:
       with:
         node-version: '20'
 
-    # 🔑 关键：删除系统自带的 Gradle 9.5（太新了，Cordova 用不了）
-    - name: Remove system Gradle (too new for Cordova)
+    # 🔑 安装兼容的 Gradle 7.6（Cordova Android 12 要求）
+    - name: Install Gradle 7.6
       run: |
-        echo "=== Removing incompatible system Gradle ==="
-        sudo rm -rf /usr/share/gradle* /usr/local/lib/gradle*
-        sudo rm -f /usr/bin/gradle /usr/local/bin/gradle
-        which gradle || echo "✅ System Gradle removed successfully"
+        echo "=== Installing Gradle 7.6 (compatible with Cordova Android 12) ==="
+        cd /tmp
+        curl -fsSL https://services.gradle.org/distributions/gradle-7.6-bin.zip -o gradle.zip
+        sudo unzip -q gradle.zip -d /opt/
+        sudo ln -sf /opt/gradle-7.6/bin/gradle /usr/local/bin/gradle
+        rm gradle.zip
+        gradle --version | head -3
+        echo "✅ Gradle 7.6 installed"
 
     - name: Install dependencies
       run: npm install

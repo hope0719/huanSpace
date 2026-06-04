@@ -31,7 +31,7 @@
         <preference name="AndroidWindowSplashScreenBackground" value="#131315" />
         <preference name="AndroidWindowSplashScreenAnimatedIcon" value="" />
     </platform>
-    <engine name="android" spec="^13.0.0" />
+    <engine name="android" spec="^14.1.0" />
     <plugin name="cordova-plugin-whitelist" spec="1.*" />
     <plugin name="cordova-plugin-statusbar" spec="3.*" />
     <plugin name="cordova-plugin-device" spec="2.*" />

@@ -26,35 +26,32 @@ jobs:
     - name: Install dependencies
       run: npm install
 
-    - name: Setup Android SDK & Build
+    - name: Setup Android SDK & Build APK
       run: |
-        # 安装 Android SDK 命令行工具
-        sudo apt-get update && sudo apt-get install -y wget unzip openjdk-17-jdk-headless
+        sudo apt-get update && sudo apt-get install -y wget unzip
         
         export ANDROID_HOME=$HOME/Android/Sdk
         mkdir -p $ANDROID_HOME/cmdline-tools
         cd $ANDROID_HOME/cmdline-tools
         
-        echo "Downloading Android SDK cmdline-tools..."
         curl -fsSL https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -o tools.zip
-        
-        echo "Extracting..."
-        unzip -q tools.zip
-        mv cmdline-tools latest
-        rm tools.zip
+        unzip -q tools.zip && mv cmdline-tools latest && rm tools.zip
         
         export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools
         
-        echo "Accepting licenses..."
         yes | sdkmanager --licenses > /dev/null 2>&1 || true
-        
-        echo "Installing platform and build-tools..."
         sdkmanager "platforms;android-34" "build-tools;34.0.0"
         
         cd $GITHUB_WORKSPACE
         
-        echo "=== Building APK ==="
-        npx cordova@12 build android --debug --no-interactive
+        echo "=== Step 1: Add Android Platform ==="
+        npx cordova@12 platform add android@12.0.0 --no-interactive --no-update-notifier
+        
+        echo "=== Step 2: Build Debug APK ==="
+        npx cordova@12 build android --debug --no-interactive --no-update-notifier
+        
+        echo "=== Build Complete ==="
+        ls -la platforms/android/app/build/outputs/apk/debug/
 
     - name: Upload APK
       uses: actions/upload-artifact@v4

@@ -23,6 +23,14 @@ jobs:
       with:
         node-version: '20'
 
+    # 🔑 关键：删除系统自带的 Gradle 9.5（太新了，Cordova 用不了）
+    - name: Remove system Gradle (too new for Cordova)
+      run: |
+        echo "=== Removing incompatible system Gradle ==="
+        sudo rm -rf /usr/share/gradle* /usr/local/lib/gradle*
+        sudo rm -f /usr/bin/gradle /usr/local/bin/gradle
+        which gradle || echo "✅ System Gradle removed successfully"
+
     - name: Install dependencies
       run: npm install
 

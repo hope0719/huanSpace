@@ -1,0 +1,39 @@
+<?xml version='1.0' encoding='utf-8'?>
+<widget id="com.huanSpace.app" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+    <name>幻影空间</name>
+    <description>
+        AI 图片生成应用 - 释放想象力，让 AI 为您创造艺术大片
+    </description>
+    <author email="dev@huanSpace.com" href="http://huanSpace.com">
+        幻影空间团队
+    </author>
+    <content src="index.html" />
+    <access origin="*" />
+    <allow-navigation href="*" />
+    <allow-intent href="http://*/*" />
+    <allow-intent href="https://*/*" />
+    <allow-intent href="tel:*" />
+    <allow-intent href="mailto:*" />
+    <preference name="Orientation" value="default" />
+    <preference name="StatusBarOverlaysWebView" value="false" />
+    <preference name="StatusBarBackgroundColor" value="#131315" />
+    <preference name="StatusBarStyle" value="lightcontent" />
+    <preference name="Fullscreen" value="false" />
+    <preference name="AutoHideSplashScreen" value="true" />
+    <preference name="SplashScreenDelay" value="2000" />
+    <preference name="FadeSplashScreen" value="true" />
+    <preference name="FadeSplashScreenDuration" value="500" />
+    <platform name="android">
+        <allow-intent href="market:*" />
+        <preference name="android-minSdkVersion" value="24" />
+        <preference name="android-targetSdkVersion" value="34" />
+        <preference name="AndroidXEnabled" value="true" />
+        <preference name="AndroidWindowSplashScreenBackground" value="#131315" />
+        <preference name="AndroidWindowSplashScreenAnimatedIcon" value="" />
+    </platform>
+    <engine name="android" spec="^13.0.0" />
+    <plugin name="cordova-plugin-whitelist" spec="1.*" />
+    <plugin name="cordova-plugin-statusbar" spec="3.*" />
+    <plugin name="cordova-plugin-device" spec="2.*" />
+    <plugin name="cordova-plugin-splashscreen" spec="6.*" />
+</widget>

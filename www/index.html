@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html class="dark" lang="zh-CN">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
+    <meta name="format-detection" content="telephone=no">
+    <meta name="msapplication-tap-highlight" content="no">
+    <title>幻影空间 - AI艺术创作</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "inverse-on-surface": "#313032",
+                        "surface-container-high": "#2a2a2c",
+                        "tertiary-fixed-dim": "#abd600",
+                        "on-error": "#690005",
+                        "on-tertiary-fixed-variant": "#3c4d00",
+                        "on-primary-fixed-variant": "#74009f",
+                        "inverse-primary": "#9800d0",
+                        "primary-fixed": "#f8d8ff",
+                        "secondary-fixed": "#00fbfb",
+                        "surface": "#131315",
+                        "surface-container-lowest": "#0e0e10",
+                        "on-secondary-fixed-variant": "#004f4f",
+                        "on-background": "#e5e1e4",
+                        "primary-fixed-dim": "#ebb2ff",
+                        "outline-variant": "#504254",
+                        "secondary-fixed-dim": "#00dddd",
+                        "surface-bright": "#39393b",
+                        "on-secondary-container": "#007070",
+                        "tertiary": "#abd600",
+                        "on-tertiary": "#283500",
+                        "secondary-container": "#00fbfb",
+                        "error": "#ffb4ab",
+                        "surface-container-low": "#1c1b1d",
+                        "outline": "#9d8ba0",
+                        "tertiary-container": "#658000",
+                        "surface-dim": "#131315",
+                        "surface-variant": "#353437",
+                        "on-secondary": "#003737",
+                        "background": "#131315",
+                        "on-primary-container": "#ffffff",
+                        "primary": "#ebb2ff",
+                        "surface-container": "#201f21",
+                        "primary-container": "#bc13fe",
+                        "on-error-container": "#ffdad6",
+                        "on-tertiary-fixed": "#161e00",
+                        "surface-tint": "#ebb2ff",
+                        "surface-container-highest": "#353437",
+                        "tertiary-fixed": "#c3f400",
+                        "on-surface": "#e5e1e4",
+                        "on-tertiary-container": "#ffffff",
+                        "inverse-surface": "#e5e1e4",
+                        "error-container": "#93000a",
+                        "on-primary-fixed": "#320047",
+                        "on-primary": "#520072",
+                        "on-secondary-fixed": "#002020",
+                        "on-surface-variant": "#d4c0d7",
+                        "secondary": "#ffffff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "stack-lg": "32px",
+                        "stack-sm": "8px",
+                        "stack-md": "16px",
+                        "margin-mobile": "20px",
+                        "base": "4px",
+                        "gutter-mobile": "12px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "body-md": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "headline-xl": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["24px", {"lineHeight": "32px", "fontWeight": "700"}],
+                        "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "600"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                        "headline-xl": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700"}]
+                    }
+                },
+            },
+        }
+    </script>
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .animate-spin { animation: spin 1s linear infinite; }
+        body {
+            background-color: #131315;
+            color: #e5e1e4;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            min-height: max(884px, 100dvh);
+        }
+        .glass-card {
+            backdrop-filter: blur(15px);
+            background: rgba(32, 31, 33, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        }
+        .neon-gradient {
+            background: linear-gradient(90deg, #bc13fe 0%, #00fbfb 100%);
+            box-shadow: 0 0 20px rgba(188, 19, 254, 0.3);
+        }
+        .neon-gradient:active {
+            transform: scale(0.96);
+            filter: brightness(1.1);
+        }
+        .mesh-glow {
+            position: absolute;
+            width: 150vw;
+            height: 100vh;
+            background: radial-gradient(circle at 20% 30%, rgba(188, 19, 254, 0.15) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 70%, rgba(0, 251, 251, 0.1) 0%, transparent 50%);
+            z-index: -1;
+            pointer-events: none;
+        }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        .masonry-grid {
+            columns: 2;
+            column-gap: 12px;
+        }
+        .masonry-item {
+            break-inside: avoid;
+            margin-bottom: 12px;
+        }
+        .neon-glow {
+            box-shadow: 0 0 15px rgba(188, 19, 254, 0.3);
+        }
+        
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .active-tab-indicator {
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: #bc13fe;
+            box-shadow: 0 0 8px #bc13fe;
+        }
+        
+        ::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .page-section {
+            display: none;
+        }
+        .page-section.active {
+            display: block;
+        }
+        
+        .nav-btn.active {
+            color: #00fbfb;
+            background: rgba(188, 19, 254, 0.2);
+            border-radius: 12px;
+            padding: 4px 16px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col pb-24">
+    <div class="mesh-glow"></div>
+    
+    <!-- Header -->
+    <header class="fixed top-0 w-full z-50 bg-surface/60 backdrop-blur-xl border-b border-white/10 flex justify-between items-center h-16 px-margin-mobile">
+        <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary text-headline-lg">auto_awesome</span>
+            <h1 class="font-display-lg text-headline-lg bg-gradient-to-r from-primary-container to-secondary-fixed bg-clip-text text-transparent">幻影空间</h1>
+        </div>
+        <button class="text-on-surface-variant hover:opacity-80 transition-all duration-300">
+            <span class="material-symbols-outlined text-headline-lg">settings</span>
+        </button>
+    </header>
+
+    <!-- Page 1: 创作页面 -->
+    <main id="page-create" class="page-section active mt-20 px-margin-mobile space-y-stack-lg flex-1">
+        <div class="space-y-stack-sm pt-4">
+            <h1 class="font-headline-xl text-headline-xl text-on-surface">释放想象力</h1>
+            <p class="font-body-md text-body-md text-on-surface-variant">输入描述，让 AI 为您创造艺术大片</p>
+        </div>
+        
+        <section class="glass-card rounded-xl p-stack-md relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary-container/20 to-transparent"></div>
+            <textarea class="w-full bg-transparent border-none focus:ring-0 text-on-surface font-body-md min-h-[160px] resize-none placeholder:text-on-surface-variant/40" placeholder="输入您的创意提示词..." id="promptInput"></textarea>
+            <div class="flex justify-between items-center mt-stack-md pt-stack-md border-t border-white/5">
+                <div class="flex gap-2">
+                    <button class="p-2 glass-card rounded-lg text-primary-fixed-dim">
+                        <span class="material-symbols-outlined">image</span>
+                    </button>
+                    <button class="p-2 glass-card rounded-lg text-primary-fixed-dim">
+                        <span class="material-symbols-outlined">mic</span>
+                    </button>
+                </div>
+                <span class="text-label-sm font-label-sm text-on-surface-variant/60" id="charCount">0 / 500</span>
+            </div>
+        </section>
+
+        <section class="space-y-stack-md">
+            <div class="flex justify-between items-end">
+                <h2 class="font-headline-lg text-headline-lg text-on-surface">风格预设</h2>
+                <span class="text-label-sm font-label-sm text-primary cursor-pointer">查看全部</span>
+            </div>
+            <div class="flex overflow-x-auto hide-scrollbar -mx-margin-mobile px-margin-mobile gap-gutter-mobile py-2" id="stylePresets">
+                <div class="flex-shrink-0 w-28 space-y-2 group cursor-pointer" data-style="cyberpunk">
+                    <div class="aspect-[4/5] rounded-xl overflow-hidden glass-card p-0.5 transition-transform group-hover:scale-105">
+                        <img alt="Cyberpunk" class="w-full h-full object-cover rounded-lg" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDYuieSzdAkl6MpIJwmemMkYKR2dbA_2VkpfgyOz2QFgAonQYYBP632aZMnwj8Pt7PWgeeCe_3T0-gKd5q1YA9xR3NUgMo0yhnrLjvdrL8SprjdZe-aiXMG3qIL70FvqYe5jHb5Se4A8FP2IQFj7ZElE4eo1lrUAMEaMYIn7lOdNB9q8M_mgsUZ83X7QfAJ5_SqF2k_mPbGkjlgveVQeveydYdIAzg5CLrNqSkcVqryb2qzZPhaINAqjePrUgZeL26w0y66oMS__UVn"/>
+                    </div>
+                    <p class="text-center font-label-sm text-label-sm text-on-surface-variant group-hover:text-primary">赛博朋克</p>
+                </div>
+                <div class="flex-shrink-0 w-28 space-y-2 group cursor-pointer" data-style="3d">
+                    <div class="aspect-[4/5] rounded-xl overflow-hidden glass-card p-0.5 border-primary transition-transform group-hover:scale-105">
+                        <img alt="3D Cinema" class="w-full h-full object-cover rounded-lg" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAADvEyFn2Dcqv7LGFnH10MaYe_M6G4GpwI-mrTUqQEeF6eZrMEB19X7nwqS1fUu1W10wbk3zeXycB1rxb7MAEANv06D-ObFY_tfejFCLJ_Yyfgah2eMFmI_uuAuURsv-V2OQxLclR6qWJPqp7cBIiYnRSfeQVnuGUAkdq6-9Rtw3E_fqV2KKPjo-f6ASqPoJHvqvkzqolifSORXFw4TevK4Vrf6sJii5kq4pfOj1sB5hkUW8o10S2-oHMH_0sxlcML3MlRGQUfk9pD"/>
+                    </div>
+                    <p class="text-center font-label-sm text-label-sm text-primary">3D大片</p>
+                </div>
+                <div class="flex-shrink-0 w-28 space-y-2 group cursor-pointer" data-style="oil">
+                    <div class="aspect-[4/5] rounded-xl overflow-hidden glass-card p-0.5 transition-transform group-hover:scale-105">
+                        <img alt="Dreamy Oil" class="w-full h-full object-cover rounded-lg" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBRlYqvVIuL0AW7v22WZcWyp32sOyFCVn9GciCzmbqZsaj0EH9vAeBy02ejSY5pei44mQbRB6KiaO4014upOC3_NsPi0PRKC1T38JBBAaN1pMwGze8Ov_a-AI9Lm5x9s9kTeMGH9OLcb2yigodPoXFaJcghT3zeiVtHSoFLCw2PNxUq1-HtcBRiQ38HIRlE9BuG9hf6gY6ag7qdlSuxUl39k0AM_s1H2tNPHYPhHxlzrJ3yZCX_zzK-g1rXs_-3ZIy6xSd1inGz6vWl"/>
+                    </div>
+                    <p class="text-center font-label-sm text-label-sm text-on-surface-variant group-hover:text-primary">梦幻油画</p>
+                </div>
+                <div class="flex-shrink-0 w-28 space-y-2 group cursor-pointer" data-style="abstract">
+                    <div class="aspect-[4/5] rounded-xl overflow-hidden glass-card p-0.5 transition-transform group-hover:scale-105">
+                        <img alt="Abstract" class="w-full h-full object-cover rounded-lg" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDAjWO5IpEqQlCykOMaXl9Z8LkIFFS_D9cU8yUUnMbACpnFuAyOmq-cf8b2dZJcpdxL42QK6vkGCV1xsCedgyjJN4cKiQI1Cy8Vg4JqHrd00K6hPPEtc26MNUkkenVPOZXd6mDV8z7FeWjflIzwAwhPnUBFNxF_W5g3OC3lCDXEY62b9ZCsRHDRv1aCqRmJirlk2fp9WtSegh8A93HHam8b2GT89Nv6gxEgZWKbr6TQBlRYJNoGx6aWbPqHyXvozEClAWULFTSKladr"/>
+                    </div>
+                    <p class="text-center font-label-sm text-label-sm text-on-surface-variant group-hover:text-primary">抽象艺术</p>
+                </div>
+            </div>
+        </section>
+
+        <div class="flex-1 flex flex-col justify-end pb-8">
+            <button class="neon-gradient w-full py-5 rounded-xl font-headline-lg text-headline-lg text-on-primary-container transition-all duration-300 flex items-center justify-center gap-3 active:scale-95 group" id="generateBtn">
+                <span class="material-symbols-outlined animate-pulse" style="font-variation-settings: 'FILL' 1;">bolt</span>
+                立即生成
+                <span class="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
+            </button>
+        </div>
+    </main>
+
+    <!-- Page 2: 灵感页面 -->
+    <main id="page-inspire" class="page-section pt-20 pb-28 px-margin-mobile">
+        <div class="flex gap-stack-md overflow-x-auto pb-stack-md no-scrollbar" id="categoryChips">
+            <button class="flex-none px-6 py-2 rounded-full bg-primary-container text-on-primary-container font-label-sm text-label-sm transition-all duration-300 neon-glow">热门</button>
+            <button class="flex-none px-6 py-2 rounded-full bg-surface-container-high text-on-surface-variant font-label-sm text-label-sm hover:bg-surface-variant transition-all duration-300">最新</button>
+            <button class="flex-none px-6 py-2 rounded-full bg-surface-container-high text-on-surface-variant font-label-sm text-label-sm hover:bg-surface-variant transition-all duration-300">人像</button>
+            <button class="flex-none px-6 py-2 rounded-full bg-surface-container-high text-on-surface-variant font-label-sm text-label-sm hover:bg-surface-variant transition-all duration-300">风景</button>
+            <button class="flex-none px-6 py-2 rounded-full bg-surface-container-high text-on-surface-variant font-label-sm text-label-sm hover:bg-surface-variant transition-all duration-300">科幻</button>
+        </div>
+        
+        <div class="masonry-grid mt-stack-md" id="artworkGrid">
+            <div class="masonry-item group relative rounded-xl overflow-hidden glass-card transition-transform duration-300 active:scale-95">
+                <img alt="AI Art 1" class="w-full object-cover rounded-t-xl" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCWkvo2NZL8YWcBAcooLrOKErhKmdATsC0bTilawn_SPo1BEVUHOvsNV5-AtzExYRUa3DaDNrmyzG6IuWIQfA3jtApPqCZepKMWHw5Yb74yoh7P2Zdq2sybo3s_FZ1MUhW5M2eSsKx0RXxNeYkSt-gy59AQQukBteNiq_6kMdbUBxsivpmbyPHJfzw6fLjdSLHBNhu-ClK0KA1K9OGYW15kuJjDvgG3Rdp4OacIaBkqbdbpvg7GVTS1RR9r-demHkDk6kUF0toXoAMe"/>
+                <div class="p-3">
+                    <div class="flex items-center gap-1 mb-2">
+                        <span class="material-symbols-outlined text-[14px] text-tertiary">bolt</span>
+                        <span class="text-[10px] text-tertiary font-bold tracking-wider">CYBER_FLUID</span>
+                    </div>
+                    <div class="text-[12px] text-on-surface-variant leading-tight line-clamp-2">液态霓虹构成的数字生命形态，深邃而灵动。</div>
+                </div>
+            </div>
+            
+            <div class="masonry-item group relative rounded-xl overflow-hidden glass-card transition-transform duration-300 active:scale-95">
+                <img alt="AI Art 2" class="w-full object-cover rounded-t-xl" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAPizA9Q1P--dCa9ElyP966mjtb7TRpaaU7Q6qiKDRoceIo1kip8MSVIKr-feKIC-RGSOBU7AAMkUgmvAqQdWY5uO33o8k3VCBq-5_jw3dyJQLzE2QAe-iUrhWD6207a-h6tJNQ65LOeYhCnNlSeEfMOHfBlbk9c4TjLVnjrLagVPM9NKP6cQJd_irUzUXN4yBTHZiwIIFxXZd7jFLl-4amFlQHnwBVo0Pcv3R0E56aVNVEt3KQxKbgmJr11rsAz6QoQ7czhfFbXJXf"/>
+                <div class="p-3">
+                    <div class="flex items-center gap-1 mb-2">
+                        <span class="material-symbols-outlined text-[14px] text-secondary-fixed">face</span>
+                        <span class="text-[10px] text-secondary-fixed font-bold tracking-wider">NEO_HUMAN</span>
+                    </div>
+                    <div class="text-[12px] text-on-surface-variant leading-tight line-clamp-2">光电子电路与有机生命的完美融合肖像。</div>
+                </div>
+            </div>
+            
+            <div class="masonry-item group relative rounded-xl overflow-hidden glass-card transition-transform duration-300 active:scale-95">
+                <img alt="AI Art 3" class="w-full object-cover rounded-t-xl" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAj6v86VfWiYx_8Q2h2ZKrTO9M_qrZoA9Wo-ifWE2reaBhGuypRVa3mAPXUFFie7lSg02h_HO_db6amTL7zekB2pGDjMnGiIImW4_oCxzZ1T087sKtfJwdjcNB5AHatU-gqEo4g-uwKrJwkQvtbmRWKtlFgl3hE7kY0aZrypDw01tNo-vsZbFq1DKb0FNFQZ5qToRB04VpIJjfMqU6qX7ZKNEbu1Q-ztQVZ_X03H6B2F4Agu5rU9ezD61v42ON9Kb_wfAHfJBFTOGGA"/>
+                <div class="p-3">
+                    <div class="flex items-center gap-1 mb-2">
+                        <span class="material-symbols-outlined text-[14px] text-primary">distance</span>
+                        <span class="text-[10px] text-primary font-bold tracking-wider">VOID_CITY</span>
+                    </div>
+                    <div class="text-[12px] text-on-surface-variant leading-tight line-clamp-2">永不熄灭的霓虹雨，在数字都市的边缘。</div>
+                </div>
+            </div>
+            
+            <div class="masonry-item group relative rounded-xl overflow-hidden glass-card transition-transform duration-300 active:scale-95">
+                <img alt="AI Art 4" class="w-full object-cover rounded-t-xl" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAnZveOT-nF6ktX-4lRhQiHwZO30KywI0T8QGu9l1yvioE3mx1iO3dR7Ypbv3yoX_tE_ywY9pK7DDHOqkz78-FdqS107VskagjZ6qxIZ01FdquANULg9UFOJnS1Fo8k9qCNGon6G_xdxLvaox-rBHMEW8m6ScOBEVp7g1ursPSHyKmee_7mfS4BgueH1QckwMgPP7_pQ2R-XEKyAwsMykOB7x6n0hXotZdTvVIkWddsE7aE7TYtWQU4fqQgYJsdM1o1Wrq_eqlOFVZq"/>
+                <div class="p-3">
+                    <div class="flex items-center gap-1 mb-2">
+                        <span class="material-symbols-outlined text-[14px] text-tertiary-fixed">auto_fix_high</span>
+                        <span class="text-[10px] text-tertiary-fixed font-bold tracking-wider">ASTRA_GEN</span>
+                    </div>
+                    <div class="text-[12px] text-on-surface-variant leading-tight line-clamp-2">星云深处的像素碎屑，编织成宇宙的梦境。</div>
+                </div>
+            </div>
+            
+            <div class="masonry-item group relative rounded-xl overflow-hidden glass-card transition-transform duration-300 active:scale-95">
+                <img alt="AI Art 5" class="w-full object-cover rounded-t-xl" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAkgoLLi3s-av-l41i4awnzIFgsuPBoplmO6jkxRLTPzCECrsO0RFQAtdR7ivomySd-8byB25sXPQigSRL1xhhK0i0Doo_jmIWL_NeOgUA-XeJm3omPguZgvkr4wjLXu2qDzRqrQ9LyO9RhC3LDXC_XBz1S8SXjQE8SJsYo3Ax05z9gmT-n79s5yH2koVPQIP3hBfWz9vtB-WU9K_Y30PNPMD9Ruvdkrh5XN1dbqbJpp8yhlkKWmXQcHHnk5epw02wPLsycL3HkDGLn"/>
+                <div class="p-3">
+                    <div class="flex items-center gap-1 mb-2">
+                        <span class="material-symbols-outlined text-[14px] text-secondary-fixed">filter_vintage</span>
+                        <span class="text-[10px] text-secondary-fixed font-bold tracking-wider">BIO_CHROME</span>
+                    </div>
+                    <div class="text-[12px] text-on-surface-variant leading-tight line-clamp-2">光纤花瓣在代码的灌溉下悄然绽放。</div>
+                </div>
+            </div>
+            
+            <div class="masonry-item group relative rounded-xl overflow-hidden glass-card transition-transform duration-300 active:scale-95">
+                <img alt="AI Art 6" class="w-full object-cover rounded-t-xl" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDmfRSCLZ-k7EK9V1lax4Nxn8L9nmRxBr4py4Uc_sw9Max8yYi6Yz2kch7AnSXGRvt1nx-QKUKP0Tla3r3dZfUTYfIIbqY5ec6IZNgg7gzzNKwqHuYzw2mOQf8qIJWXszbIdWILaxMl0r2CxHHmGOicMjx7WYnxaS8-c2mu-hROxEbgssfMw9qVGSaf18RotreJ8rx-F2pyXCaN7YO7fgoAYYWuVcPr3M4w0BRJh7WxRhnBFw3cT3Y8OJqmN5x3Rk-S-FqKDCqjAKw5"/>
+                <div class="p-3">
+                    <div class="flex items-center gap-1 mb-2">
+                        <span class="material-symbols-outlined text-[14px] text-primary">landscape</span>
+                        <span class="text-[10px] text-primary font-bold tracking-wider">ZENITH_9</span>
+                    </div>
+                    <div class="text-[12px] text-on-surface-variant leading-tight line-clamp-2">在紫色晶体构成的群山之中，寻找最初的信号。</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Page 3: 个人中心页面 -->
+    <main id="page-profile" class="page-section pt-24 pb-32 px-margin-mobile min-h-screen">
+        <section class="flex flex-col items-center mb-stack-lg">
+            <div class="relative w-24 h-24 mb-stack-md neon-border">
+                <img alt="User Avatar" class="w-full h-full rounded-full object-cover border-2 border-surface shadow-2xl" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAzuF-jyfeHV9SS9vcwI3sOGd4cquDgLUuITUhQpOhkbG20AQRSG6tzKrI0YE2oNIuoITvsHnAtMu_Qg4q0lhE6k867dxGXQr0KW6uyrEbmaZW6v9abHFm4cziXUKAq1r3ofGInEbEjl5hWvaraPR8KH9fvSduwmPKxzCB4WdEInxxUY0BzFUpt8CevO6IX7RfLApQtNW4s_5DTng4aZieSKvP7MekQQvI-qyJvE03-7H8aBreG7-kWJw2xabD1jnkwpsgHvnRezMXY"/>
+            </div>
+            <h2 class="font-headline-lg text-headline-lg mb-1">Visionary_Creator</h2>
+            <p class="font-label-sm text-on-surface-variant mb-stack-md">专注探索AI视觉艺术的无限可能</p>
+            
+            <div class="flex justify-around w-full max-w-sm mb-stack-lg py-4 glass-card rounded-xl">
+                <div class="flex flex-col items-center">
+                    <span class="font-headline-lg text-primary">128</span>
+                    <span class="font-label-sm text-on-surface-variant">作品</span>
+                </div>
+                <div class="w-px h-8 bg-white/10 self-center"></div>
+                <div class="flex flex-col items-center">
+                    <span class="font-headline-lg text-primary">1.2k</span>
+                    <span class="font-label-sm text-on-surface-variant">关注</span>
+                </div>
+                <div class="w-px h-8 bg-white/10 self-center"></div>
+                <div class="flex flex-col items-center">
+                    <span class="font-headline-lg text-primary">35.6k</span>
+                    <span class="font-label-sm text-on-surface-variant">粉丝</span>
+                </div>
+            </div>
+            
+            <div class="flex gap-gutter-mobile w-full max-w-sm">
+                <button class="flex-1 py-3 bg-gradient-to-r from-primary-container to-[#74009f] rounded-xl font-headline-lg text-white shadow-[0_0_15px_rgba(188,19,254,0.3)] active:scale-95 transition-all text-[16px]">
+                    编辑资料
+                </button>
+                <button class="flex-1 py-3 glass-card rounded-xl font-headline-lg text-secondary-fixed-dim border border-secondary-fixed-dim/30 active:scale-95 transition-all text-[16px]">
+                    设置
+                </button>
+            </div>
+        </section>
+        
+        <section>
+            <div class="flex border-b border-white/10 mb-stack-md" id="profileTabs">
+                <button class="relative flex-1 py-3 font-label-sm text-primary tab-btn" data-tab="published">
+                    发布的
+                    <div class="active-tab-indicator"></div>
+                </button>
+                <button class="flex-1 py-3 font-label-sm text-on-surface-variant hover:text-on-surface transition-colors tab-btn" data-tab="collected">
+                    收藏的
+                </button>
+                <button class="flex-1 py-3 font-label-sm text-on-surface-variant hover:text-on-surface transition-colors tab-btn" data-tab="drafts">
+                    草稿箱
+                </button>
+            </div>
+            
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-gutter-mobile" id="artworkGridProfile">
+                <div class="aspect-[3/4] rounded-xl overflow-hidden glass-card group relative">
+                    <img alt="AI Art 1" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBz2-jhTIHhs6-zULfozXumDkPSoS5NGuQktIIGtCBS7lTORjL2boZUYn5aNNdxRfbAspnNj1nBhiJXz8V7hi8sieUCq27-9s_33FxEv3LJ7Oo_F_CLxJeGluI4y_UBQDZw78_Zha9hglFhUFsPjWtmWEdH_L8cVjtA4XTHzHJRScetr6mJN-9lx-Jap-0UcOmWnNKx7-_QAZkzkpvAJewsLajvay1KfMbPe_IaHTpFqTC7fUbssdixE9S4pYtFqQv62JAGA_HNVIfv"/>
+                    <div class="absolute bottom-2 left-2 flex items-center gap-1 bg-black/40 backdrop-blur-md px-2 py-1 rounded-full">
+                        <span class="material-symbols-outlined text-[14px] text-primary">favorite</span>
+                        <span class="text-[10px] text-white">2.4k</span>
+                    </div>
+                </div>
+                
+                <div class="aspect-[3/4] rounded-xl overflow-hidden glass-card group relative">
+                    <img alt="AI Art 2" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDUH2z6a4MfNaU75-fjrcpSsingQU0kMW-gQJO8vzIloY9zYBQ9XRxxfUIvKQNOOEAK7fFzxHPtb4uxXnrtLoBSuLfWNsbku6_QcqshenDROjf_JUdvDmyIUzsgs162op2XAaFvvbZmlJb98jh2Ge8jjdyUSq4VSyx3nY5AOHWo8xMxg9KeP8KSIB7tqvSDckJzaKLpkuEe2Y54P74cwdY8vzw0mgJyM0kFqM--M7JXnLC6J0caSeTDrordjz65xDlc5XMpM8nZ_AXU"/>
+                    <div class="absolute bottom-2 left-2 flex items-center gap-1 bg-black/40 backdrop-blur-md px-2 py-1 rounded-full">
+                        <span class="material-symbols-outlined text-[14px] text-primary">favorite</span>
+                        <span class="text-[10px] text-white">1.8k</span>
+                    </div>
+                </div>
+                
+                <div class="aspect-[3/4] rounded-xl overflow-hidden glass-card group relative">
+                    <img alt="AI Art 3" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC0p-YUNzRkofhgMkpXUdeyQxp0_ah0UEMx9EdsleqJluHCPsV_B7yJlp0Qh988rBoMAf3ww1HtqPxEfs7_Xxd8i9xb83y_2NTvbjqaxASbny0E_tGq1q97IolMd8luzZml9msz47awZwHYM6jTQMkDjSn8KCxX2XxqFsmLeipgxgrcCXMI-CtwXG-jKoUeAHUsDSjI6xysd7asTmodxlU-VDhjlGaBnmKeRXyCSuPrHSZGmvvJYA74DpZlM0anwyWnqo_oFTeUnud8"/>
+                    <div class="absolute bottom-2 left-2 flex items-center gap-1 bg-black/40 backdrop-blur-md px-2 py-1 rounded-full">
+                        <span class="material-symbols-outlined text-[14px] text-primary">favorite</span>
+                        <span class="text-[10px] text-white">4.2k</span>
+                    </div>
+                </div>
+                
+                <div class="aspect-[3/4] rounded-xl overflow-hidden glass-card group relative">
+                    <img alt="AI Art 4" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDMNsJ3oMI3nfSyoErZ95UuZMfS7l4ED_LFVHevYqf-thSDiu0oNGwF1XcYmxm-nvCajMEKFF8CI85kr4cngXn5rCgJfNXST4nQ6K7ImckCaqr27-PMAfZgwYZui0JnXwEsJ4nZPJD77RJ1RpOMyevhHzSO2fzLsCSSWTWee-GYWHeARheOyerLtA0kc8sMZIwLlGQ-OOvCglcqE6vTxtDUgSS8q3VFKZSLG2OCRi-WAmZlo_-IMKAY3V02u_ebi-phTFJZZ_bEKxJA"/>
+                    <div class="absolute bottom-2 left-2 flex items-center gap-1 bg-black/40 backdrop-blur-md px-2 py-1 rounded-full">
+                        <span class="material-symbols-outlined text-[14px] text-primary">favorite</span>
+                        <span class="text-[10px] text-white">892</span>
+                    </div>
+                </div>
+                
+                <div class="aspect-[3/4] rounded-xl overflow-hidden glass-card group relative">
+                    <img alt="AI Art 5" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuChEDaNQP2CkoI7EqnCW1GKv4JSVfhYcy8Yhxth9JTWE17XmejsxpdjSdDWSdRiiMZsIJFBlBJPY1yeNlSuW_2EwU1WhxncJRgqWsJsDWOFO4a7QCqF_tRz_vpIcQQ1WvtSofyz4iZ3S6RoVJRI56uaPFn1FH0noeH63pBtljVu7an-ebDf933c_X1N451khwFdoMV6xkXm61Ed7kKJFPXCSIM4R3mjvRaOi8EUEl15VyRR1ryvbQF7ZQ4T7dXZizKDAkeyCiw6sCWl"/>
+                    <div class="absolute bottom-2 left-2 flex items-center gap-1 bg-black/40 backdrop-blur-md px-2 py-1 rounded-full">
+                        <span class="material-symbols-outlined text-[14px] text-primary">favorite</span>
+                        <span class="text-[10px] text-white">5.1k</span>
+                    </div>
+                </div>
+                
+                <div class="aspect-[3/4] rounded-xl overflow-hidden glass-card group relative">
+                    <img alt="AI Art 6" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBvJ5BoDjyPrySpVmoGgbwmyJ0v2B5bcjR1EUzqny8-rcWgyuqNhycxLmTL6W2vqOpizkzwNCUjFer5CSlzFed70f6IMDdQ0rysUOwY6feCclIUKZMCNk800dU87dK3A-UpQ4H5c95KL9hDmrfSOMLbgMgMQA0gtR2D_Fvaai1cTc8TkH3L0UTws3qOTzVIA_F82e7KljnD_yKM58aU1SFWrLDsJZLPKiaWx6Y27cn1xf17Yt8IkQJ-8w4lN-_-r_qC4I33B2SW8YFv"/>
+                    <div class="absolute bottom-2 left-2 flex items-center gap-1 bg-black/40 backdrop-blur-md px-2 py-1 rounded-full">
+                        <span class="material-symbols-outlined text-[14px] text-primary">favorite</span>
+                        <span class="text-[10px] text-white">1.1k</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="fixed bottom-0 w-full z-50 bg-surface-container/40 backdrop-blur-2xl border-t border-white/10 flex justify-around items-center h-20 pb-safe px-gutter-mobile rounded-t-xl">
+        <button class="nav-btn flex flex-col items-center justify-center text-primary-fixed-dim font-bold bg-primary-container/20 rounded-xl px-4 py-1 active:scale-95 transition-transform duration-200" data-page="page-create">
+            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">bolt</span>
+            <span class="font-label-sm text-label-sm">创作</span>
+        </button>
+        <button class="nav-btn flex flex-col items-center justify-center text-on-surface-variant hover:text-primary active:scale-95 transition-transform duration-200" data-page="page-inspire">
+            <span class="material-symbols-outlined">explore</span>
+            <span class="font-label-sm text-label-sm">灵感</span>
+        </button>
+        <button class="nav-btn flex flex-col items-center justify-center text-on-surface-variant hover:text-primary active:scale-95 transition-transform duration-200" data-page="page-profile">
+            <span class="material-symbols-outlined">person</span>
+            <span class="font-label-sm text-label-sm">我的</span>
+        </button>
+    </nav>
+
+    <script>
+        // Page Navigation
+        const navBtns = document.querySelectorAll('.nav-btn');
+        const pages = document.querySelectorAll('.page-section');
+        
+        navBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const targetPage = btn.dataset.page;
+                
+                // Update active states
+                navBtns.forEach(b => {
+                    b.classList.remove('active');
+                    b.classList.add('text-on-surface-variant');
+                    if(b.dataset.page !== 'page-create') {
+                        b.classList.remove('text-primary-fixed-dim', 'bg-primary-container/20');
+                    }
+                });
+                
+                btn.classList.add('active');
+                if(btn.dataset.page === 'page-create') {
+                    btn.classList.add('text-primary-fixed-dim', 'bg-primary-container/20');
+                    btn.classList.remove('text-on-surface-variant');
+                } else {
+                    btn.classList.remove('text-on-surface-variant');
+                    btn.classList.add('text-primary');
+                }
+                
+                // Show target page
+                pages.forEach(page => {
+                    page.classList.remove('active');
+                });
+                document.getElementById(targetPage).classList.add('active');
+            });
+        });
+
+        // Prompt Input Character Count
+        const textarea = document.getElementById('promptInput');
+        const charCount = document.getElementById('charCount');
+        if(textarea) {
+            textarea.addEventListener('input', (e) => {
+                charCount.textContent = `${e.target.value.length} / 500`;
+                if(e.target.value.length > 400) {
+                    charCount.classList.add('text-error');
+                } else {
+                    charCount.classList.remove('text-error');
+                }
+            });
+        }
+
+        // Style Presets Selection
+        const styleCards = document.querySelectorAll('#stylePresets .group');
+        styleCards.forEach(card => {
+            card.addEventListener('click', () => {
+                styleCards.forEach(c => {
+                    c.querySelector('div').classList.remove('border-primary', 'border-2');
+                    c.querySelector('p').classList.remove('text-primary');
+                    c.querySelector('p').classList.add('text-on-surface-variant');
+                });
+                card.querySelector('div').classList.add('border-primary', 'border-2');
+                card.querySelector('p').classList.remove('text-on-surface-variant');
+                card.querySelector('p').classList.add('text-primary');
+            });
+        });
+
+        // Category Chips
+        const chips = document.querySelectorAll('#categoryChips button');
+        chips.forEach(chip => {
+            chip.addEventListener('click', () => {
+                chips.forEach(c => {
+                    c.classList.remove('bg-primary-container', 'text-on-primary-container', 'neon-glow');
+                    c.classList.add('bg-surface-container-high', 'text-on-surface-variant');
+                });
+                chip.classList.add('bg-primary-container', 'text-on-primary-container', 'neon-glow');
+                chip.classList.remove('bg-surface-container-high', 'text-on-surface-variant');
+            });
+        });
+
+        // Profile Tabs
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                tabBtns.forEach(b => {
+                    b.classList.remove('text-primary');
+                    b.classList.add('text-on-surface-variant');
+                    const indicator = b.querySelector('.active-tab-indicator');
+                    if(indicator) indicator.remove();
+                });
+                btn.classList.add('text-primary');
+                btn.classList.remove('text-on-surface-variant');
+                
+                if(!btn.querySelector('.active-tab-indicator')) {
+                    const indicator = document.createElement('div');
+                    indicator.className = 'active-tab-indicator';
+                    btn.appendChild(indicator);
+                }
+            });
+        });
+
+        // Sensenova API Configuration
+        const SENSENOVA_API_URL = 'https://token.sensenova.cn/v1/images/generations';
+        const SENSENOVA_API_KEY = 'REDACTED_SENSENOVA_KEY';
+
+        // Generate Button
+        const generateBtn = document.getElementById('generateBtn');
+        if(generateBtn) {
+            generateBtn.addEventListener('click', async () => {
+                const prompt = textarea.value;
+                if(!prompt.trim()) {
+                    alert('请输入创意提示词！');
+                    return;
+                }
+
+                // Disable button and show loading state
+                generateBtn.disabled = true;
+                generateBtn.innerHTML = '<span class="material-symbols-outlined animate-spin">sync</span> 生成中...';
+
+                try {
+                    const response = await fetch(SENSENOVA_API_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': 'Bearer ' + SENSENOVA_API_KEY,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            model: 'sensenova-u1-fast',
+                            prompt: prompt,
+                            size: '2048x2048',
+                            n: 1
+                        })
+                    });
+
+                    const result = await response.json();
+
+                    if (result.data && result.data.length > 0) {
+                        const imageUrl = result.data[0].url;
+                        
+                        // Show success and display image
+                        showGeneratedImage(prompt, imageUrl);
+                    } else if (result.error) {
+                        throw new Error(result.error.message || 'API返回错误');
+                    } else {
+                        throw new Error('生成失败：返回数据格式错误');
+                    }
+                } catch (error) {
+                    console.error('Generation error:', error);
+                    alert('生成失败：' + error.message);
+                } finally {
+                    // Restore button state
+                    generateBtn.disabled = false;
+                    generateBtn.innerHTML = '<span class="material-symbols-outlined animate-pulse" style="font-variation-settings: \'FILL\' 1;">bolt</span> 立即生成 <span class="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>';
+                }
+            });
+        }
+
+        // Show generated image in a modal overlay
+        function showGeneratedImage(prompt, imageUrl) {
+            // Create overlay
+            const overlay = document.createElement('div');
+            overlay.id = 'imageOverlay';
+            overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.85);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;animation:fadeIn 0.3s ease;';
+            
+            overlay.innerHTML = `
+                <div style="max-width:90vw;max-height:70vh;border-radius:16px;overflow:hidden;border:2px solid rgba(188,19,254,0.5);box-shadow:0 0 30px rgba(188,19,254,0.3);">
+                    <img src="${imageUrl}" style="width:100%;max-height:70vh;object-fit:contain;display:block;" />
+                </div>
+                <p style="color:#e5e1e4;margin-top:16px;font-size:14px;text-align:center;max-width:80vw;">${prompt}</p>
+                <div style="display:flex;gap:12px;margin-top:16px;">
+                    <a href="${imageUrl}" download="huanSpace_${Date.now()}.png" style="padding:12px 24px;background:linear-gradient(90deg,#bc13fe,#00fbfb);border-radius:12px;color:white;font-weight:700;text-decoration:none;font-size:14px;">保存图片</a>
+                    <button onclick="document.getElementById('imageOverlay').remove()" style="padding:12px 24px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:12px;color:#e5e1e4;font-weight:600;font-size:14px;cursor:pointer;">关闭</button>
+                </div>
+            `;
+            
+            document.body.appendChild(overlay);
+            
+            // Close on background click
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) overlay.remove();
+            });
+
+            // Add generated image to inspiration gallery
+            addToGallery(prompt, imageUrl);
+        }
+
+        // Add generated image to the inspiration gallery
+        function addToGallery(prompt, imageUrl) {
+            const gallery = document.querySelector('.masonry-grid');
+            if (!gallery) return;
+
+            const item = document.createElement('div');
+            item.className = 'masonry-item group relative rounded-xl overflow-hidden glass-card transition-transform duration-300 active:scale-95';
+            item.innerHTML = `
+                <img alt="AI Art" class="w-full object-cover rounded-t-xl" src="${imageUrl}" />
+                <div class="p-3">
+                    <div class="flex items-center gap-1 mb-2">
+                        <span class="material-symbols-outlined text-[14px] text-tertiary">auto_awesome</span>
+                        <span class="text-[10px] text-tertiary font-bold tracking-wider">GENERATED</span>
+                    </div>
+                    <div class="text-[12px] text-on-surface-variant leading-tight line-clamp-2">${prompt}</div>
+                </div>
+            `;
+            gallery.insertBefore(item, gallery.firstChild);
+        }
+
+        // Image Reveal Animation
+        const observerOptions = {
+            threshold: 0.1
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('opacity-100', 'translate-y-0');
+                    entry.target.classList.remove('opacity-0', 'translate-y-8');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.masonry-item').forEach(item => {
+            item.classList.add('opacity-0', 'translate-y-8', 'transition-all', 'duration-700', 'ease-out');
+            observer.observe(item);
+        });
+    </script>
+</body>
+</html>

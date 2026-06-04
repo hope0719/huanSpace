@@ -1,0 +1,23 @@
+# Cordova
+platforms/
+plugins/
+node_modules/
+
+# Build
+*.apk
+*.aab
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Environment
+.env
+
+# Logs
+*.log

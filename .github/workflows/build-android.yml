@@ -18,15 +18,7 @@ jobs:
         distribution: 'zulu'
         java-version: '17'
 
-    - name: Setup Android SDK
-      uses: subosito/android-action@v1
-      with:
-        api-level: 34
-        build-tools: 34.0.0
-        arch: x64
-        cache: true
-
-    - name: Setup Node.js 20
+    - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '20'
@@ -34,9 +26,34 @@ jobs:
     - name: Install dependencies
       run: npm install
 
-    - name: Accept licenses & build
+    - name: Setup Android SDK & Build
       run: |
+        # 安装 Android SDK 命令行工具
+        sudo apt-get update && sudo apt-get install -y wget unzip openjdk-17-jdk-headless
+        
+        export ANDROID_HOME=$HOME/Android/Sdk
+        mkdir -p $ANDROID_HOME/cmdline-tools
+        cd $ANDROID_HOME/cmdline-tools
+        
+        echo "Downloading Android SDK cmdline-tools..."
+        curl -fsSL https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -o tools.zip
+        
+        echo "Extracting..."
+        unzip -q tools.zip
+        mv cmdline-tools latest
+        rm tools.zip
+        
+        export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools
+        
+        echo "Accepting licenses..."
         yes | sdkmanager --licenses > /dev/null 2>&1 || true
+        
+        echo "Installing platform and build-tools..."
+        sdkmanager "platforms;android-34" "build-tools;34.0.0"
+        
+        cd $GITHUB_WORKSPACE
+        
+        echo "=== Building APK ==="
         npx cordova@12 build android --debug --no-interactive
 
     - name: Upload APK

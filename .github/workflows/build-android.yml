@@ -23,17 +23,20 @@ jobs:
       with:
         node-version: '20'
 
-    # 🔑 安装兼容的 Gradle 7.6（Cordova Android 12 要求）
-    - name: Install Gradle 7.6
+    # 🔑 安装 Gradle 8.4（Cordova Android 13 兼容）
+    - name: Install Gradle 8.4
       run: |
-        echo "=== Installing Gradle 7.6 (compatible with Cordova Android 12) ==="
         cd /tmp
-        curl -fsSL https://services.gradle.org/distributions/gradle-7.6-bin.zip -o gradle.zip
+        curl -fsSL https://services.gradle.org/distributions/gradle-8.4-bin.zip -o gradle.zip
         sudo unzip -q gradle.zip -d /opt/
-        sudo ln -sf /opt/gradle-7.6/bin/gradle /usr/local/bin/gradle
+        sudo ln -sf /opt/gradle-8.4/bin/gradle /usr/local/bin/gradle
         rm gradle.zip
         gradle --version | head -3
-        echo "✅ Gradle 7.6 installed"
+
+    - name: Update cordova-android to v13
+      run: |
+        sed -i '' 's/"cordova-android": "^12.0.0"/"cordova-android": "^13.0.0"/' package.json || \
+        sed -i 's/"cordova-android": "^12.0.0"/"cordova-android": "^13.0.0"/' package.json
 
     - name: Install dependencies
       run: npm install
@@ -57,12 +60,18 @@ jobs:
         cd $GITHUB_WORKSPACE
 
         echo "=== Step 1: Add Platform ==="
-        npx cordova@12 platform add android@12.0.0 --no-interactive --no-update-notifier
+        npx cordova@12 platform add android@13.0.0 --no-interactive --no-update-notifier
 
-        echo "=== Step 2: Build APK ==="
+        echo "=== Step 2: Fix Gradle Wrapper Version ==="
+        # 强制使用 Gradle 8.4（与系统安装的一致）
+        sed -i 's|distributionUrl=.*|distributionUrl=https\\://services.gradle.org/distributions/gradle-8.4-bin.zip|' \
+          platforms/android/gradle/wrapper/gradle-wrapper.properties 2>/dev/null || true
+        cat platforms/android/gradle/wrapper/gradle-wrapper.properties 2>/dev/null || echo "No wrapper found"
+
+        echo "=== Step 3: Build APK ==="
         npx cordova@12 build android --debug --no-interactive --no-update-notifier
 
-        echo "=== Done! Listing output ==="
+        echo "=== Done! ==="
         find . -name "*.apk" -type f 2>/dev/null || echo "No APK found"
 
     - name: Upload APK

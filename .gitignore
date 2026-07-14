@@ -21,3 +21,7 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Local/private (不要提交)
+.workbuddy/
+output/

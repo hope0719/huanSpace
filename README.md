@@ -14,3 +14,8 @@
 
 ### 🔧 构建方式
 GitHub Actions 自动构建 Android APK
+
+### 🔑 配置 API Key
+本项目调用商汤 **SenseNova** 图像生成接口（`sensenova-u1-fast`）。开源版本中**不包含任何可用的 Key**，请打开 `www/index.html`，将 `SENSENOVA_API_KEY` 替换为你自己在 [sensenova.cn](https://sensenova.cn) 申请的 Key 后即可使用。
+
+> 安全提示：请勿将真实 Key 提交到公开仓库，建议通过环境变量或本地配置文件注入。

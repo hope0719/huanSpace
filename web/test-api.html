@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API 测试页面 - 幻影空间</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #888;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f5f5f5;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .result.show {
+            display: block;
+        }
+
+        .result h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .result pre {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .status {
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .image-result {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .image-result img {
+            max-width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .image-result a {
+            display: inline-block;
+            margin-top: 15px;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .image-result a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 幻影空间 API 测试</h1>
+        <p class="subtitle">测试 Sensenova 图片生成 API</p>
+
+        <div class="form-group">
+            <label for="prompt">提示词（Prompt）</label>
+            <textarea id="prompt" placeholder="输入图片描述，例如：一只可爱的小狗在草地上奔跑">一只可爱的小狗在草地上奔跑，赛博朋克风格</textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="size">图片尺寸（Size）</label>
+            <select id="size">
+                <option value="1664x2496">竖版 - 1664x2496</option>
+                <option value="2496x1664">横版 - 2496x1664</option>
+                <option value="2048x2048" selected>正方形 - 2048x2048</option>
+                <option value="2752x1536">宽屏 - 2752x1536</option>
+                <option value="1536x2752">长屏 - 1536x2752</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="model">模型（Model）</label>
+            <input type="text" id="model" value="sensenova-u1-fast" readonly>
+        </div>
+
+        <div class="form-group">
+            <label for="n">生成数量（N）</label>
+            <input type="number" id="n" value="1" min="1" max="4">
+        </div>
+
+        <button class="btn" id="generateBtn" onclick="generateImage()">🚀 生成图片</button>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>正在生成图片，请稍候...</p>
+            <p style="font-size: 12px; color: #888; margin-top: 10px;">可能需要 30-60 秒</p>
+        </div>
+
+        <div class="result" id="result">
+            <h3>API 响应结果</h3>
+            <pre id="resultContent"></pre>
+            <div class="image-result" id="imageResult"></div>
+        </div>
+    </div>
+
+    <script>
+        async function generateImage() {
+            const prompt = document.getElementById('prompt').value;
+            const size = document.getElementById('size').value;
+            const model = document.getElementById('model').value;
+            const n = parseInt(document.getElementById('n').value);
+
+            if (!prompt.trim()) {
+                alert('请输入提示词！');
+                return;
+            }
+
+            // Disable button and show loading
+            const btn = document.getElementById('generateBtn');
+            btn.disabled = true;
+            btn.textContent = '生成中...';
+
+            document.getElementById('loading').classList.add('show');
+            document.getElementById('result').classList.remove('show');
+
+            try {
+                const response = await fetch('http://localhost:3000/api/generate-image', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        prompt: prompt,
+                        size: size,
+                        model: model,
+                        n: n
+                    })
+                });
+
+                const data = await response.json();
+
+                // Show result
+                document.getElementById('result').classList.add('show');
+                document.getElementById('resultContent').textContent = JSON.stringify(data, null, 2);
+
+                // If successful, display image
+                if (data.success && data.data && data.data.data) {
+                    const imageUrl = data.data.data[0].url;
+                    document.getElementById('imageResult').innerHTML = `
+                        <img src="${imageUrl}" alt="Generated Image">
+                        <br>
+                        <a href="${imageUrl}" target="_blank">🔗 打开原图</a>
+                    `;
+                }
+
+                console.log('API Response:', data);
+
+            } catch (error) {
+                document.getElementById('result').classList.add('show');
+                document.getElementById('resultContent').textContent = 'Error: ' + error.message;
+                console.error('Error:', error);
+            } finally {
+                // Restore button
+                btn.disabled = false;
+                btn.textContent = '🚀 生成图片';
+                document.getElementById('loading').classList.remove('show');
+            }
+        }
+
+        // Allow Enter key to trigger generation
+        document.getElementById('prompt').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && e.ctrlKey) {
+                generateImage();
+            }
+        });
+    </script>
+</body>
+</html>
